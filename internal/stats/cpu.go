@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"math"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -50,7 +49,6 @@ func readProcStat() ([]cpuTimes, cpuTimes, error) {
 	var total cpuTimes
 
 	scanner := bufio.NewScanner(f)
-	cpuRegex := regexp.MustCompile(`^cpu(\d+)\s+`)
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -64,10 +62,11 @@ func readProcStat() ([]cpuTimes, cpuTimes, error) {
 			continue
 		}
 
-		matches := cpuRegex.FindStringSubmatch(fields[0])
-		if len(matches) > 0 {
-			coreTimes := parseCpuFields(fields[1:])
-			perCore = append(perCore, coreTimes)
+		if strings.HasPrefix(fields[0], "cpu") && len(fields[0]) > 3 {
+			if _, err := strconv.Atoi(fields[0][3:]); err == nil {
+				coreTimes := parseCpuFields(fields[1:])
+				perCore = append(perCore, coreTimes)
+			}
 		}
 	}
 
