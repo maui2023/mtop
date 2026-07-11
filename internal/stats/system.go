@@ -35,5 +35,8 @@ func (c *Collector) GetSystemStats() (SystemStats, error) {
 		return stats, err
 	}
 
+	// 6. GPUs (best-effort, no error on failure)
+	stats.GPUs = c.GetGPUStats()
+
 	return stats, nil
 }

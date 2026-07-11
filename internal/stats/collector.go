@@ -55,11 +55,12 @@ type ProcessInfo struct {
 }
 
 type SystemStats struct {
-	CPU      CPUStats
-	Memory   MemoryStats
-	Disks    []DiskInfo
-	Networks []NetInterface
+	CPU       CPUStats
+	Memory    MemoryStats
+	Disks     []DiskInfo
+	Networks  []NetInterface
 	Processes []ProcessInfo
+	GPUs      []GPUStats
 }
 
 type Collector struct {

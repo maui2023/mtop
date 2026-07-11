@@ -16,6 +16,9 @@ const (
 	SortName
 )
 
+// cpuHistorySize is the max number of historical CPU samples kept for the sparkline.
+const cpuHistorySize = 60
+
 type statsMsg struct {
 	stats stats.SystemStats
 	err   error
@@ -32,12 +35,16 @@ type Model struct {
 	sortBy       SortField
 	hostname     string
 	ready        bool
+
+	// CPU history for sparkline graph (ring buffer, newest at end)
+	cpuHistory []float64
 }
 
 func NewModel(collector *stats.Collector) Model {
 	return Model{
-		collector: collector,
-		sortBy:    SortCPU,
+		collector:  collector,
+		sortBy:     SortCPU,
+		cpuHistory: make([]float64, 0, cpuHistorySize),
 	}
 }
 
@@ -62,3 +69,12 @@ func (m Model) fetchStatsCmd() tea.Cmd {
 		return statsMsg{stats: s, err: err}
 	}
 }
+
+// pushCPUHistory appends the latest CPU usage sample, capping at cpuHistorySize.
+func (m *Model) pushCPUHistory(pct float64) {
+	m.cpuHistory = append(m.cpuHistory, pct)
+	if len(m.cpuHistory) > cpuHistorySize {
+		m.cpuHistory = m.cpuHistory[len(m.cpuHistory)-cpuHistorySize:]
+	}
+}
+

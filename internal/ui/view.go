@@ -66,7 +66,7 @@ func (m Model) View() string {
 	header := m.renderHeader()
 
 	// 2. Render CPU & Memory Box (Section 1)
-	sec1Height := 10
+	sec1Height := 11
 	cpuWidth := int(float64(m.width) * 0.55)
 	memWidth := m.width - cpuWidth
 
@@ -75,7 +75,18 @@ func (m Model) View() string {
 
 	row1 := lipgloss.JoinHorizontal(lipgloss.Top, cpuBox, memBox)
 
-	// 3. Render Disk & Net Box (Section 2)
+	// 3. Render GPU Box (Section 1.5) — only if GPUs detected
+	var gpuRow string
+	var gpuHeight int
+	if len(m.stats.GPUs) > 0 {
+		gpuHeight = 4 + len(m.stats.GPUs)*2
+		if gpuHeight < 6 {
+			gpuHeight = 6
+		}
+		gpuRow = m.renderGPUBox(m.width, gpuHeight)
+	}
+
+	// 4. Render Disk & Net Box (Section 2)
 	sec2Height := 9
 	diskWidth := int(float64(m.width) * 0.55)
 	netWidth := m.width - diskWidth
@@ -85,21 +96,20 @@ func (m Model) View() string {
 
 	row2 := lipgloss.JoinHorizontal(lipgloss.Top, diskBox, netBox)
 
-	// 4. Render Processes Box (Section 3)
-	// Remaining height for processes. We subtract height of header (2) + row1 (10) + row2 (9) + border gaps.
-	procHeight := m.height - (headerHeight() + sec1Height + sec2Height)
+	// 5. Render Processes Box
+	procHeight := m.height - (headerHeight() + sec1Height + gpuHeight + sec2Height)
 	if procHeight < 6 {
-		procHeight = 6 // Min height
+		procHeight = 6
 	}
 	procBox := m.renderProcessBox(m.width, procHeight)
 
-	return lipgloss.JoinVertical(
-		lipgloss.Left,
-		header,
-		row1,
-		row2,
-		procBox,
-	)
+	parts := []string{header, row1}
+	if gpuRow != "" {
+		parts = append(parts, gpuRow)
+	}
+	parts = append(parts, row2, procBox)
+
+	return lipgloss.JoinVertical(lipgloss.Left, parts...)
 }
 
 func headerHeight() int {
@@ -136,10 +146,18 @@ func (m Model) renderHeader() string {
 
 func (m Model) renderCPUBox(width, height int) string {
 	title := styleBoxTitle.Render(" CPU ")
-	
-	// Create total usage bar
+
+	// Sparkline graph on the right side of the header row
+	graphWidth := width / 3
+	if graphWidth < 10 {
+		graphWidth = 10
+	}
+	graphHeight := 3 // rows for the mini graph
+	graph := m.renderCPUGraph(graphWidth, graphHeight)
+
+	// Total usage bar (narrowed to leave room for graph)
 	totalPct := m.stats.CPU.UsageTotal
-	barWidth := width - 20
+	barWidth := width - graphWidth - 22
 	if barWidth < 5 {
 		barWidth = 5
 	}
@@ -148,7 +166,6 @@ func (m Model) renderCPUBox(width, height int) string {
 
 	// Core bars
 	var coresStr []string
-	// Number of columns depends on core count and available width
 	coresPerLine := 2
 	if width < 50 {
 		coresPerLine = 1
@@ -162,11 +179,10 @@ func (m Model) renderCPUBox(width, height int) string {
 		}
 		coreBar := makeProgressBar(core.Usage, coreBarWidth, colorBlue)
 		coreStr := fmt.Sprintf("C%d:%4.0f%% %s", core.ID, core.Usage, coreBar)
-		
+
 		if line == "" {
 			line = coreStr
 		} else {
-			// Pad the columns
 			colWidth := width / coresPerLine
 			padLen := colWidth - lipgloss.Width(line) - 1
 			if padLen > 0 {
@@ -181,8 +197,8 @@ func (m Model) renderCPUBox(width, height int) string {
 		coresStr = append(coresStr, line)
 	}
 
-	// Limit to inner height (height - 4 for borders, title, usage, and gap)
-	maxCoresLines := height - 4
+	// Limit to inner height
+	maxCoresLines := height - 6
 	if maxCoresLines < 1 {
 		maxCoresLines = 1
 	}
@@ -190,13 +206,101 @@ func (m Model) renderCPUBox(width, height int) string {
 		coresStr = coresStr[:maxCoresLines]
 	}
 
-	content := title + "\n\n" + totalStr + "\n\n" + strings.Join(coresStr, "\n")
+	// Left column: title + usage + cores
+	leftLines := []string{title, "", totalStr, ""}
+	leftLines = append(leftLines, coresStr...)
+	leftContent := strings.Join(leftLines, "\n")
 
-	// Subtracting 2 from width and height to account for the border rendering in Lipgloss
+	// Right column: graph
+	graphLabel := styleHeaderLabel.Render("CPU History")
+	graphContent := graphLabel + "\n" + graph
+
+	// Join left and right side by side inside the box
+	leftWidth := width - graphWidth - 4
+	leftCol := lipgloss.NewStyle().Width(leftWidth).Render(leftContent)
+	rightCol := lipgloss.NewStyle().
+		Width(graphWidth).
+		Align(lipgloss.Right).
+		Render(graphContent)
+
+	content := lipgloss.JoinHorizontal(lipgloss.Top, leftCol, rightCol)
+
 	return styleBorder.
 		Width(width - 2).
 		Height(height - 2).
 		Render(content)
+}
+
+// renderCPUGraph draws a sparkline (bar graph) of CPU history using block characters.
+// Each column represents one historical sample. Height is the number of terminal rows.
+func (m Model) renderCPUGraph(width, height int) string {
+	if height < 1 {
+		height = 1
+	}
+
+	// The 8 vertical block chars from bottom to top
+	blockChars := []string{" ", "▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"}
+
+	// Take the last `width` samples
+	history := m.cpuHistory
+	if len(history) > width {
+		history = history[len(history)-width:]
+	}
+
+	// Pad with zeros if we don't have enough history yet
+	padded := make([]float64, width)
+	offset := width - len(history)
+	for i, v := range history {
+		padded[offset+i] = v
+	}
+
+	// Build the graph row by row (top row = height-1, bottom = 0)
+	rows := make([]string, height)
+	for row := 0; row < height; row++ {
+		// Row 0 is the bottom, row (height-1) is the top
+		bottomRow := height - 1 - row
+		var sb strings.Builder
+		for _, pct := range padded {
+			// Map 0-100% to 0..(height*8-1) granularity
+			totalUnits := height * 8
+			units := int(math.Round(pct / 100.0 * float64(totalUnits)))
+			// For this row, what sub-block level?
+			rowBase := bottomRow * 8
+			rowTop := rowBase + 8
+
+			var ch string
+			if units >= rowTop {
+				// Full block
+				ch = blockChars[8]
+			} else if units > rowBase {
+				// Partial block
+				ch = blockChars[units-rowBase]
+			} else {
+				// Empty
+				ch = blockChars[0]
+			}
+			sb.WriteString(ch)
+		}
+		// Color: green for low, yellow for mid, red for high
+		// Use last sample to determine color
+		var graphColor lipgloss.Color
+		if len(history) > 0 {
+			last := history[len(history)-1]
+			switch {
+			case last >= 80:
+				graphColor = colorWarn
+			case last >= 50:
+				graphColor = colorGold
+			default:
+				graphColor = colorCyan
+			}
+		} else {
+			graphColor = colorCyan
+		}
+		rows[row] = lipgloss.NewStyle().Foreground(graphColor).Render(sb.String())
+	}
+
+	return strings.Join(rows, "\n")
 }
 
 func (m Model) renderMemoryBox(width, height int) string {
@@ -420,6 +524,98 @@ func (m Model) renderProcessBox(width, height int) string {
 	// Footer help instructions
 	helpStr := styleHeaderLabel.Render(" [q] Quit  |  [s] Toggle Sort  |  [j/k] Scroll Processes  |  [r] Refresh ")
 	content := title + "\n\n" + strings.Join(lines, "\n") + "\n\n" + helpStr
+
+	return styleBorder.
+		Width(width - 2).
+		Height(height - 2).
+		Render(content)
+}
+
+// renderGPUBox renders GPU info for all detected GPUs (Intel/Nvidia/AMD).
+func (m Model) renderGPUBox(width, height int) string {
+	title := styleBoxTitle.Render(" GPU ")
+
+	if len(m.stats.GPUs) == 0 {
+		return styleBorder.
+			Width(width - 2).
+			Height(height - 2).
+			Render(title + "\n\nNo GPU Detected")
+	}
+
+	var lines []string
+	for _, g := range m.stats.GPUs {
+		// Vendor badge color
+		var vendorColor lipgloss.Color
+		switch g.Vendor {
+		case stats.GPUVendorNvidia:
+			vendorColor = lipgloss.Color("#76b900") // NVIDIA green
+		case stats.GPUVendorAMD:
+			vendorColor = lipgloss.Color("#ed1c24") // AMD red
+		case stats.GPUVendorIntel:
+			vendorColor = colorBlue
+		default:
+			vendorColor = colorDim
+		}
+
+		vendorBadge := lipgloss.NewStyle().Bold(true).Foreground(vendorColor).Render(string(g.Vendor))
+		gpuName := g.Name
+		if len(gpuName) > 40 {
+			gpuName = gpuName[:37] + "..."
+		}
+		nameStr := fmt.Sprintf("%s  %s", vendorBadge, styleHeaderVal.Render(gpuName))
+
+		barWidth := width - 28
+		if barWidth < 5 {
+			barWidth = 5
+		}
+
+		// GPU core utilization bar
+		var usageColor lipgloss.Color
+		switch {
+		case g.UsagePct >= 80:
+			usageColor = colorWarn
+		case g.UsagePct >= 50:
+			usageColor = colorGold
+		default:
+			usageColor = lipgloss.Color("#76b900")
+		}
+		usageBar := makeProgressBar(g.UsagePct, barWidth, usageColor)
+		usageStr := fmt.Sprintf("  GPU: %5.1f%% %s", g.UsagePct, usageBar)
+
+		// Memory info
+		var memStr string
+		if g.MemTotalMB > 0 {
+			memPct := float64(g.MemUsedMB) / float64(g.MemTotalMB) * 100
+			memBar := makeProgressBar(memPct, barWidth, colorPurple)
+			memStr = fmt.Sprintf("  MEM: %5.1f%% %s  (%d/%d MB)",
+				memPct, memBar, g.MemUsedMB, g.MemTotalMB)
+		}
+
+		// Temperature
+		var tempStr string
+		if g.TemperatureC > 0 {
+			tempColor := colorCyan
+			if g.TemperatureC >= 80 {
+				tempColor = colorWarn
+			} else if g.TemperatureC >= 60 {
+				tempColor = colorGold
+			}
+			tempStr = "  " + lipgloss.NewStyle().Foreground(tempColor).
+				Render(fmt.Sprintf("Temp: %.0f°C", g.TemperatureC))
+		}
+
+		lines = append(lines, nameStr)
+		lines = append(lines, usageStr)
+		if memStr != "" {
+			lines = append(lines, memStr)
+		}
+		if tempStr != "" {
+			lines = append(lines, tempStr)
+		}
+		lines = append(lines, "") // spacer between GPUs
+	}
+
+	content := title + "\n\n" + strings.Join(lines, "\n")
 
 	return styleBorder.
 		Width(width - 2).

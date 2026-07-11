@@ -16,6 +16,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.err = nil
 			m.ready = true
 			m.sortProcesses()
+			m.pushCPUHistory(msg.stats.CPU.UsageTotal)
 		}
 		return m, nil
 
