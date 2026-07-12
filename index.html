@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mtop — Premium System Monitor TUI for Proxmox LXC & Bare Metal</title>
+  <meta name="description" content="A lightweight, premium terminal user interface (TUI) system monitoring application for Proxmox LXC containers & Bare Metal machines. Built in Go.">
+  <meta name="theme-color" content="#00f5d4">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Mtop System Monitor">
+  <meta property="og:description" content="Premium System Monitor TUI Tailored for Proxmox LXC & Bare Metal.">
+  <meta property="og:type" content="website">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --color-cyan: #00f5d4;
+      --color-blue: #00bbf9;
+      --color-purple: #9b5de5;
+      --color-pink: #f15bb5;
+      --color-gold: #fee440;
+      --color-bg: #090d16;
+      --color-card-bg: rgba(15, 23, 42, 0.45);
+      --color-border: rgba(51, 65, 85, 0.5);
+      --color-text: #f8fafc;
+      --color-dim: #64748b;
+      --font-main: 'Outfit', sans-serif;
+      --font-mono: 'Fira Code', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background-color: var(--color-bg);
+      color: var(--color-text);
+      font-family: var(--font-main);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 10px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--color-bg);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--color-border);
+      border-radius: 5px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--color-cyan);
+    }
+
+    /* Three.js Canvas Container */
+    #canvas-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    /* Layout & Sections */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      padding: 1.5rem 2rem;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--color-border);
+      background: rgba(9, 13, 22, 0.7);
+    }
+
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-weight: 800;
+      font-size: 1.8rem;
+      letter-spacing: 2px;
+      background: linear-gradient(135deg, var(--color-cyan), var(--color-blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+    }
+
+    .nav-links a {
+      color: var(--color-text);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1rem;
+      transition: color 0.3s;
+    }
+
+    .nav-links a:hover {
+      color: var(--color-cyan);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    /* Hero Section */
+    section.hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding-top: 8rem;
+      position: relative;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 4rem;
+      align-items: center;
+      width: 100%;
+    }
+
+    @media (max-width: 968px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+      .mock-terminal {
+        margin: 0 auto;
+      }
+    }
+
+    .hero-badge {
+      display: inline-block;
+      padding: 0.4rem 1rem;
+      background: rgba(0, 245, 212, 0.1);
+      border: 1px solid var(--color-cyan);
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: var(--color-cyan);
+      margin-bottom: 1.5rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .hero-title {
+      font-size: 3.8rem;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(to right, #ffffff, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-title span {
+      background: linear-gradient(135deg, var(--color-cyan), var(--color-blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-desc {
+      font-size: 1.2rem;
+      color: var(--color-dim);
+      margin-bottom: 2.5rem;
+      max-width: 540px;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 968px) {
+      .hero-buttons {
+        justify-content: center;
+      }
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 0.8rem 2rem;
+      border-radius: 8px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--color-cyan), var(--color-blue));
+      color: var(--color-bg);
+      box-shadow: 0 4px 20px rgba(0, 245, 212, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(0, 245, 212, 0.5);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--color-text);
+      border: 1px solid var(--color-border);
+      backdrop-filter: blur(8px);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--color-cyan);
+      transform: translateY(-2px);
+    }
+
+    /* Interactive Mock Terminal */
+    .mock-terminal {
+      background: #05070c;
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+      width: 100%;
+      max-width: 580px;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .terminal-header {
+      background: #111827;
+      padding: 0.6rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .terminal-dots {
+      display: flex;
+      gap: 0.4rem;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .dot.red { background: #ef4444; }
+    .dot.yellow { background: #eab308; }
+    .dot.green { background: #22c55e; }
+
+    .terminal-title {
+      color: var(--color-dim);
+      font-size: 0.75rem;
+    }
+
+    .terminal-content {
+      padding: 1rem;
+      color: #94a3b8;
+      min-height: 290px;
+      white-space: pre-wrap;
+    }
+
+    /* Feature Cards Section */
+    section.features {
+      padding: 8rem 0;
+      position: relative;
+    }
+
+    .section-title {
+      font-size: 2.5rem;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .section-title span {
+      background: linear-gradient(135deg, var(--color-cyan), var(--color-blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+    }
+
+    .glass-card {
+      background: var(--color-card-bg);
+      border: 1px solid var(--color-border);
+      border-radius: 16px;
+      padding: 2.5rem;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .glass-card:hover {
+      border-color: var(--color-cyan);
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0, 245, 212, 0.1);
+    }
+
+    .glass-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, transparent, rgba(0, 245, 212, 0.03));
+      pointer-events: none;
+    }
+
+    .card-badge {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--color-cyan);
+      margin-bottom: 1rem;
+      display: inline-block;
+    }
+
+    .card-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: var(--color-text);
+    }
+
+    .card-desc {
+      color: var(--color-dim);
+      font-size: 0.95rem;
+    }
+
+    /* Downloads Section */
+    section.downloads {
+      padding: 6rem 0 10rem 0;
+      text-align: center;
+    }
+
+    .downloads-container {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      margin-top: 3rem;
+    }
+
+    .download-card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      padding: 2rem;
+      width: 250px;
+      transition: all 0.3s;
+    }
+
+    .download-card:hover {
+      border-color: var(--color-blue);
+      transform: scale(1.03);
+    }
+
+    .arch-name {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .platform {
+      font-size: 0.8rem;
+      color: var(--color-dim);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--color-border);
+      padding: 3rem 0;
+      background: rgba(9, 13, 22, 0.9);
+      text-align: center;
+      color: var(--color-dim);
+      font-size: 0.9rem;
+    }
+
+    .footer-logo {
+      margin-bottom: 1.5rem;
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .footer-links a {
+      color: var(--color-dim);
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+
+    .footer-links a:hover {
+      color: var(--color-cyan);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Three.js Interactive Background -->
+  <div id="canvas-container"></div>
+
+  <!-- Header -->
+  <header>
+    <div class="nav-container">
+      <div class="logo">⚡ MTOP</div>
+      <nav class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#terminal">Live Demo</a>
+        <a href="#downloads">Downloads</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero" id="hero">
+    <div class="container">
+      <div class="hero-grid">
+        <div class="hero-text-block">
+          <div class="hero-badge">TUI for Proxmox LXC & Bare Metal</div>
+          <h1 class="hero-title">Real-Time monitoring, <span>done right.</span></h1>
+          <p class="hero-desc">
+            A premium, ultra-fast system monitor terminal interface. Resolves incorrect CPU, RAM, and Storage stats in Proxmox LXC containers automatically using cgroups v2.
+          </p>
+          <div class="hero-buttons">
+            <a href="#downloads" class="btn btn-primary">Download Binaries</a>
+            <a href="#features" class="btn btn-secondary">Learn Features</a>
+          </div>
+        </div>
+
+        <!-- Simulated Live TUI Interface -->
+        <div class="mock-terminal" id="terminal">
+          <div class="terminal-header">
+            <div class="terminal-dots">
+              <div class="dot red"></div>
+              <div class="dot yellow"></div>
+              <div class="dot green"></div>
+            </div>
+            <div class="terminal-title">mtop — admin@proxmox-lxc:~</div>
+            <div></div>
+          </div>
+          <div class="terminal-content" id="terminal-content"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features" id="features">
+    <div class="container">
+      <h2 class="section-title">Why Use <span>Mtop</span>?</h2>
+      <div class="features-grid">
+        <div class="glass-card">
+          <div class="card-badge" style="color: var(--color-cyan);">PROXMOX CONTEXT</div>
+          <h3 class="card-title">Intelligent LXC Isolation</h3>
+          <p class="card-desc">Unlike generic tools, mtop detects cgroup v2 boundaries. It maps exact CPU cores, VRAM allocation, and actual container storage rootfs, suppressing host clutter.</p>
+        </div>
+        <div class="glass-card">
+          <div class="card-badge" style="color: var(--color-blue);">GRAPHICS</div>
+          <h3 class="card-title">Integrated GPU Stats</h3>
+          <p class="card-desc">Native detection of NVIDIA, AMD, and Intel GPUs. Monitors cores utilization, dedicated VRAM metrics, and thermal inputs dynamically in one view.</p>
+        </div>
+        <div class="glass-card">
+          <div class="card-badge" style="color: var(--color-purple);">GRAPHING</div>
+          <h3 class="card-title">CPU History Sparkline</h3>
+          <p class="card-desc">An interactive rising/falling graph representing the latest CPU utilization, written using block unicode characters with auto-scaling metrics.</p>
+        </div>
+        <div class="glass-card">
+          <div class="card-badge" style="color: var(--color-pink);">MANAGEMENT</div>
+          <h3 class="card-title">Interactive Process Kill</h3>
+          <p class="card-desc">Fully interactive process browser. Sort dynamically by memory size, CPU usage, PID, or name, and quickly terminate selected processes by pressing key 9.</p>
+        </div>
+        <div class="glass-card">
+          <div class="card-badge" style="color: var(--color-cyan);">CROSS-PLATFORM</div>
+          <h3 class="card-title">Linux, macOS & Windows</h3>
+          <p class="card-desc">Built in Go, Mtop compiles to a single lightweight executable that runs anywhere, including Linux (Bare Metal, LXC, Raspberry Pi), macOS, and Windows.</p>
+        </div>
+        <div class="glass-card">
+          <div class="card-badge" style="color: var(--color-blue);">OPEN SOURCE</div>
+          <h3 class="card-title">100% Free & Open Source</h3>
+          <p class="card-desc">Distributed under the permissive MIT License. Full visibility, community-driven, and completely free of tracking, telemetry, or external runtimes.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Downloads Section -->
+  <section class="downloads" id="downloads">
+    <div class="container">
+      <h2 class="section-title">Get <span>Mtop</span> Now</h2>
+      <p style="color: var(--color-dim); max-width: 600px; margin: 0 auto;">No external libraries, python runtimes, or node modules needed. A single static binary runs instantly.</p>
+      <div class="downloads-container">
+        <div class="download-card">
+          <div class="arch-name">Linux x64</div>
+          <div class="platform">AMD64 Arch</div>
+          <a href="https://github.com/maui/mtop/raw/main/mtop-linux-amd64" class="btn btn-secondary btn-sm" style="display: block;">Download Binary</a>
+        </div>
+        <div class="download-card">
+          <div class="arch-name">Linux ARM64</div>
+          <div class="platform">AArch64 (Pi / LXC)</div>
+          <a href="https://github.com/maui/mtop/raw/main/mtop-linux-arm64" class="btn btn-secondary btn-sm" style="display: block;">Download Binary</a>
+        </div>
+        <div class="download-card">
+          <div class="arch-name">Linux ARM</div>
+          <div class="platform">ARMv7 (32-bit)</div>
+          <a href="https://github.com/maui/mtop/raw/main/mtop-linux-arm" class="btn btn-secondary btn-sm" style="display: block;">Download Binary</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="logo footer-logo" style="justify-content: center; font-size: 1.5rem;">⚡ MTOP</div>
+      <div class="footer-links">
+        <a href="#hero">Home</a>
+        <a href="#features">Features</a>
+        <a href="#downloads">Downloads</a>
+      </div>
+      <p>© 2026 Mtop. Inspired by Btop. Tailored for container performance tracking.</p>
+    </div>
+  </footer>
+
+  <!-- Three.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <script>
+    // --- 1. Three.js Background & Parallax ---
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    container.appendChild(renderer.domElement);
+
+    // Create a network structure of nodes & links
+    const geometry = new THREE.BufferGeometry();
+    const particleCount = 120;
+    const coords = [];
+    const colors = [];
+
+    const cyanColor = new THREE.Color('#00f5d4');
+    const blueColor = new THREE.Color('#00bbf9');
+    const purpleColor = new THREE.Color('#9b5de5');
+
+    for (let i = 0; i < particleCount; i++) {
+      coords.push(
+        (Math.random() - 0.5) * 80,
+        (Math.random() - 0.5) * 80,
+        (Math.random() - 0.5) * 80
+      );
+
+      // Random color among theme options
+      const col = [cyanColor, blueColor, purpleColor][Math.floor(Math.random() * 3)];
+      colors.push(col.r, col.g, col.b);
+    }
+
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(coords, 3));
+    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+    // Particle styling
+    const material = new THREE.PointsMaterial({
+      size: 1.2,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.6,
+    });
+
+    const particles = new THREE.Points(geometry, material);
+    scene.add(particles);
+
+    // Create custom grid lines connecting particles
+    const lineMat = new THREE.LineBasicMaterial({
+      color: 0x334155,
+      transparent: true,
+      opacity: 0.25,
+    });
+
+    const positions = geometry.attributes.position.array;
+    const lineIndices = [];
+
+    // Simple proximity line joining
+    for (let i = 0; i < particleCount; i++) {
+      for (let j = i + 1; j < particleCount; j++) {
+        const dx = positions[i * 3] - positions[j * 3];
+        const dy = positions[i * 3 + 1] - positions[j * 3 + 1];
+        const dz = positions[i * 3 + 2] - positions[j * 3 + 2];
+        const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+        if (dist < 15) {
+          lineIndices.push(i, j);
+        }
+      }
+    }
+
+    const lineGeo = new THREE.BufferGeometry();
+    lineGeo.setAttribute('position', geometry.attributes.position);
+    lineGeo.setIndex(lineIndices);
+
+    const connections = new THREE.LineSegments(lineGeo, lineMat);
+    scene.add(connections);
+
+    camera.position.z = 40;
+
+    // Mouse movement interaction variables
+    let mouseX = 0, mouseY = 0;
+    let targetX = 0, targetY = 0;
+
+    document.addEventListener('mousemove', (e) => {
+      mouseX = (e.clientX - window.innerWidth / 2) * 0.05;
+      mouseY = (e.clientY - window.innerHeight / 2) * 0.05;
+    });
+
+    // Scroll interaction
+    let scrollY = 0;
+    window.addEventListener('scroll', () => {
+      scrollY = window.pageYOffset * 0.04;
+    });
+
+    // Animation loop
+    const animate = () => {
+      requestAnimationFrame(animate);
+
+      // Inertia tracking
+      targetX += (mouseX - targetX) * 0.05;
+      targetY += (mouseY - targetY) * 0.05;
+
+      // Apply rotation based on mouse coordinates & scroll position
+      particles.rotation.y = targetX * 0.01 + scrollY * 0.05;
+      particles.rotation.x = -targetY * 0.01 + scrollY * 0.03;
+
+      connections.rotation.y = particles.rotation.y;
+      connections.rotation.x = particles.rotation.x;
+
+      renderer.render(scene, camera);
+    };
+
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // --- 2. Live Terminal TUI simulation ---
+    const terminal = document.getElementById('terminal-content');
+    const cpuBars = [" ", "▏", "▎", "▍", "▌", "▋", "▊", "▉", "█"];
+    const graphChars = [" ", "▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"];
+
+    // CPU history state
+    let history = Array(20).fill(10);
+
+    const updateTerminal = () => {
+      // Simulate real-time metrics
+      const timeStr = new Date().toLocaleTimeString();
+      const cpuVal = Math.sin(Date.now() / 1500) * 40 + 50 + Math.random() * 8;
+      const memVal = 55.4 + Math.sin(Date.now() / 3000) * 1.5;
+      const gpuVal = 12.0 + Math.sin(Date.now() / 1000) * 4.0;
+
+      // Push history
+      history.push(cpuVal);
+      history.shift();
+
+      // Render CPU bars
+      const renderBar = (pct, color) => {
+        const size = 10;
+        const fill = Math.floor((pct / 100) * size);
+        let blocks = '█'.repeat(fill);
+        if (fill < size) {
+          const rem = Math.floor(((pct / 100) * size - fill) * 8);
+          blocks += cpuBars[rem];
+          blocks += ' '.repeat(size - fill - 1);
+        }
+        return `<span style="color: ${color}">[${blocks}]</span>`;
+      };
+
+      // Draw mini CPU history graph
+      let graphLines = ["", "", ""];
+      for (let row = 2; row >= 0; row--) {
+        let line = "";
+        for (let x = 0; x < history.length; x++) {
+          const val = history[x];
+          const unit = Math.floor((val / 100) * 24);
+          const base = row * 8;
+          if (unit >= base + 8) {
+            line += graphChars[8];
+          } else if (unit > base) {
+            line += graphChars[unit - base];
+          } else {
+            line += " ";
+          }
+        }
+        graphLines[2 - row] = `<span style="color: var(--color-cyan)">${line}</span>`;
+      }
+
+      const viewHtml = `
+<span style="color: var(--color-cyan); font-weight: bold;"> MTOP</span>  <span style="color: var(--color-dim)">Host:</span> lxc-srv1  |  <span style="color: var(--color-dim)">Env:</span> LXC (cgroups)  |  <span style="color: var(--color-dim)">Time:</span> ${timeStr}
+<hr style="border: 0; border-top: 1px solid var(--color-border); margin: 0.5rem 0;" />
+<div style="display: flex; gap: 2rem;">
+  <div>
+    <span style="color: var(--color-blue); font-weight: bold;">[ CPU ]</span>
+    Usage: ${cpuVal.toFixed(1)}% ${renderBar(cpuVal, 'var(--color-cyan)')}
+
+    C0: 42% ${renderBar(42, 'var(--color-blue)')}   C1: 58% ${renderBar(58, 'var(--color-blue)')}
+    C2: 66% ${renderBar(66, 'var(--color-blue)')}   C3: 31% ${renderBar(31, 'var(--color-blue)')}
+  </div>
+  <div>
+    <span style="color: var(--color-dim)">CPU History</span>
+    ${graphLines[0]}
+    ${graphLines[1]}
+    ${graphLines[2]}
+  </div>
+</div>
+<hr style="border: 0; border-top: 1px solid var(--color-border); margin: 0.5rem 0;" />
+<div style="display: flex; gap: 2rem;">
+  <div style="flex: 1;">
+    <span style="color: var(--color-pink); font-weight: bold;">[ GPU ]</span> Intel GPU
+    GPU: ${gpuVal.toFixed(1)}% ${renderBar(gpuVal, '#76b900')}
+  </div>
+  <div style="flex: 1;">
+    <span style="color: var(--color-purple); font-weight: bold;">[ Memory ]</span>
+    RAM:  ${memVal.toFixed(1)}% ${renderBar(memVal, 'var(--color-purple)')}  17.0 / 30.6 GB
+  </div>
+</div>
+<hr style="border: 0; border-top: 1px solid var(--color-border); margin: 0.5rem 0;" />
+<span style="color: var(--color-cyan); font-weight: bold;"> Processes (Sorted: [CPU])</span>
+PID      User      CPU%   MEM%   Size      Command
+<span style="background: rgba(0, 245, 212, 0.1); color: var(--color-cyan); display: block;">9785     admin     ${(cpuVal * 0.45).toFixed(1)}    1.6    499.5 MB  antigravity-ide</span>
+10250    admin     ${(cpuVal * 0.25).toFixed(1)}    0.8    241.2 MB  chrome
+2200     root      1.2     0.1    7.7 MB    redis-server
+
+<span style="color: var(--color-dim)"> [q] Quit  |  [s] Sort  |  [j/k] Scroll  |  [9] Kill Proc  |  [r] Refresh</span>`;
+
+      terminal.innerHTML = viewHtml;
+    };
+
+    setInterval(updateTerminal, 1000);
+    updateTerminal();
+  </script>
+</body>
+</html>
