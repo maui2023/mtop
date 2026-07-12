@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mtop — Premium System Monitor TUI for Proxmox LXC & Bare Metal</title>
-  <meta name="description" content="A lightweight, premium terminal user interface (TUI) system monitoring application for Proxmox LXC containers & Bare Metal machines. Built in Go.">
+  <meta name="description"
+    content="A lightweight, premium terminal user interface (TUI) system monitoring application for Proxmox LXC containers & Bare Metal machines. Built in Go.">
   <meta name="theme-color" content="#00f5d4">
 
   <!-- Open Graph -->
@@ -15,7 +17,9 @@
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Outfit:wght@300;400;600;800&display=swap"
+    rel="stylesheet">
 
   <style>
     :root {
@@ -55,13 +59,16 @@
     ::-webkit-scrollbar {
       width: 10px;
     }
+
     ::-webkit-scrollbar-track {
       background: var(--color-bg);
     }
+
     ::-webkit-scrollbar-thumb {
       background: var(--color-border);
       border-radius: 5px;
     }
+
     ::-webkit-scrollbar-thumb:hover {
       background: var(--color-cyan);
     }
@@ -156,6 +163,7 @@
         grid-template-columns: 1fr;
         text-align: center;
       }
+
       .mock-terminal {
         margin: 0 auto;
       }
@@ -248,7 +256,7 @@
       background: #05070c;
       border: 1px solid var(--color-border);
       border-radius: 12px;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
       width: 100%;
       max-width: 580px;
       font-family: var(--font-mono);
@@ -277,9 +285,17 @@
       border-radius: 50%;
     }
 
-    .dot.red { background: #ef4444; }
-    .dot.yellow { background: #eab308; }
-    .dot.green { background: #22c55e; }
+    .dot.red {
+      background: #ef4444;
+    }
+
+    .dot.yellow {
+      background: #eab308;
+    }
+
+    .dot.green {
+      background: #22c55e;
+    }
 
     .terminal-title {
       color: var(--color-dim);
@@ -443,6 +459,7 @@
     }
   </style>
 </head>
+
 <body>
 
   <!-- Three.js Interactive Background -->
@@ -454,7 +471,7 @@
       <div class="logo">⚡ MTOP</div>
       <nav class="nav-links">
         <a href="#features">Features</a>
-        <a href="https://github.com/maui/mtop" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://github.com/maui2023/mtop" target="_blank" rel="noopener noreferrer">GitHub</a>
         <a href="#downloads">Downloads</a>
       </nav>
     </div>
@@ -468,7 +485,8 @@
           <div class="hero-badge">TUI for Proxmox LXC & Bare Metal</div>
           <h1 class="hero-title">Real-Time monitoring, <span>done right.</span></h1>
           <p class="hero-desc">
-            A premium, ultra-fast system monitor terminal interface. Resolves incorrect CPU, RAM, and Storage stats in Proxmox LXC containers automatically using cgroups v2.
+            A premium, ultra-fast system monitor terminal interface. Resolves incorrect CPU, RAM, and Storage stats in
+            Proxmox LXC containers automatically using cgroups v2.
           </p>
           <div class="hero-buttons">
             <a href="#downloads" class="btn btn-primary">Download Binaries</a>
@@ -501,32 +519,38 @@
         <div class="glass-card">
           <div class="card-badge" style="color: var(--color-cyan);">PROXMOX CONTEXT</div>
           <h3 class="card-title">Intelligent LXC Isolation</h3>
-          <p class="card-desc">Unlike generic tools, mtop detects cgroup v2 boundaries. It maps exact CPU cores, VRAM allocation, and actual container storage rootfs, suppressing host clutter.</p>
+          <p class="card-desc">Unlike generic tools, mtop detects cgroup v2 boundaries. It maps exact CPU cores, VRAM
+            allocation, and actual container storage rootfs, suppressing host clutter.</p>
         </div>
         <div class="glass-card">
           <div class="card-badge" style="color: var(--color-blue);">GRAPHICS</div>
           <h3 class="card-title">Integrated GPU Stats</h3>
-          <p class="card-desc">Native detection of NVIDIA, AMD, and Intel GPUs. Monitors cores utilization, dedicated VRAM metrics, and thermal inputs dynamically in one view.</p>
+          <p class="card-desc">Native detection of NVIDIA, AMD, and Intel GPUs. Monitors cores utilization, dedicated
+            VRAM metrics, and thermal inputs dynamically in one view.</p>
         </div>
         <div class="glass-card">
           <div class="card-badge" style="color: var(--color-purple);">GRAPHING</div>
           <h3 class="card-title">CPU History Sparkline</h3>
-          <p class="card-desc">An interactive rising/falling graph representing the latest CPU utilization, written using block unicode characters with auto-scaling metrics.</p>
+          <p class="card-desc">An interactive rising/falling graph representing the latest CPU utilization, written
+            using block unicode characters with auto-scaling metrics.</p>
         </div>
         <div class="glass-card">
           <div class="card-badge" style="color: var(--color-pink);">MANAGEMENT</div>
           <h3 class="card-title">Interactive Process Kill</h3>
-          <p class="card-desc">Fully interactive process browser. Sort dynamically by memory size, CPU usage, PID, or name, and quickly terminate selected processes by pressing key 9.</p>
+          <p class="card-desc">Fully interactive process browser. Sort dynamically by memory size, CPU usage, PID, or
+            name, and quickly terminate selected processes by pressing key 9.</p>
         </div>
         <div class="glass-card">
           <div class="card-badge" style="color: var(--color-cyan);">CROSS-PLATFORM</div>
           <h3 class="card-title">Linux, macOS & Windows</h3>
-          <p class="card-desc">Built in Go, Mtop compiles to a single lightweight executable that runs anywhere, including Linux (Bare Metal, LXC, Raspberry Pi), macOS, and Windows.</p>
+          <p class="card-desc">Built in Go, Mtop compiles to a single lightweight executable that runs anywhere,
+            including Linux (Bare Metal, LXC, Raspberry Pi), macOS, and Windows.</p>
         </div>
         <div class="glass-card">
           <div class="card-badge" style="color: var(--color-blue);">OPEN SOURCE</div>
           <h3 class="card-title">100% Free & Open Source</h3>
-          <p class="card-desc">Distributed under the permissive MIT License. Full visibility, community-driven, and completely free of tracking, telemetry, or external runtimes.</p>
+          <p class="card-desc">Distributed under the permissive MIT License. Full visibility, community-driven, and
+            completely free of tracking, telemetry, or external runtimes.</p>
         </div>
       </div>
     </div>
@@ -536,22 +560,26 @@
   <section class="downloads" id="downloads">
     <div class="container">
       <h2 class="section-title">Get <span>Mtop</span> Now</h2>
-      <p style="color: var(--color-dim); max-width: 600px; margin: 0 auto;">No external libraries, python runtimes, or node modules needed. A single static binary runs instantly.</p>
+      <p style="color: var(--color-dim); max-width: 600px; margin: 0 auto;">No external libraries, python runtimes, or
+        node modules needed. A single static binary runs instantly.</p>
       <div class="downloads-container">
         <div class="download-card">
           <div class="arch-name">Linux x64</div>
           <div class="platform">AMD64 Arch</div>
-          <a href="https://github.com/maui/mtop/raw/main/mtop-linux-amd64" class="btn btn-secondary btn-sm" style="display: block;">Download Binary</a>
+          <a href="https://github.com/maui2023/mtop/raw/main/mtop-linux-amd64" class="btn btn-secondary btn-sm"
+            style="display: block;">Download Binary</a>
         </div>
         <div class="download-card">
           <div class="arch-name">Linux ARM64</div>
           <div class="platform">AArch64 (Pi / LXC)</div>
-          <a href="https://github.com/maui/mtop/raw/main/mtop-linux-arm64" class="btn btn-secondary btn-sm" style="display: block;">Download Binary</a>
+          <a href="https://github.com/maui2023/mtop/raw/main/mtop-linux-arm64" class="btn btn-secondary btn-sm"
+            style="display: block;">Download Binary</a>
         </div>
         <div class="download-card">
           <div class="arch-name">Linux ARM</div>
           <div class="platform">ARMv7 (32-bit)</div>
-          <a href="https://github.com/maui/mtop/raw/main/mtop-linux-arm" class="btn btn-secondary btn-sm" style="display: block;">Download Binary</a>
+          <a href="https://github.com/maui2023/mtop/raw/main/mtop-linux-arm" class="btn btn-secondary btn-sm"
+            style="display: block;">Download Binary</a>
         </div>
       </div>
     </div>
@@ -789,4 +817,5 @@ PID      User      CPU%   MEM%   Size      Command
     updateTerminal();
   </script>
 </body>
+
 </html>
