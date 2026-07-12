@@ -1,0 +1,16 @@
+Package: mtop
+Version: 1.0.0
+Architecture: arm64
+Maintainer: maui2023 <https://github.com/maui2023>
+Filename: pool/main/m/mtop/mtop_1.0.0_arm64.deb
+Size: 2291294
+MD5sum: 97dc3843296e9aa13a5813c51982fc9c
+SHA1: 0734a25b943bf7869d9e934cf3c156fedb2f8cd8
+SHA256: b1cbfd9d54b1d4286fd9582655991541e44903b22d93cb1871d6ab1e7f3d48ec
+Section: utils
+Priority: optional
+Description: Premium System Monitor TUI Tailored for Proxmox LXC & Bare Metal
+ Mtop is a lightweight terminal user interface (TUI) system monitoring application.
+ It is highly optimized for Proxmox LXC containers and Bare Metal systems, providing
+ accurate resource reporting by utilizing cgroups v2.
+

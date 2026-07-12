@@ -1,0 +1,15 @@
+Origin: Mtop APT Repo
+Label: Mtop
+Suite: stable
+Codename: stable
+Architectures: amd64 arm64 armhf
+Components: main
+Description: Mtop APT Repository for Proxmox LXC & Bare Metal
+Date: Sun, 12 Jul 2026 02:56:44 +0000
+SHA256:
+ d7c10fdefbb6514482bd89bcc83a460df3a1b376843da6ffba98c2486f5cbb7e 659 main/binary-amd64/Packages
+ ebd88a5643c8f8cf2de547f7c1a30f77d6242cf19b75b39637daecc354948305 476 main/binary-amd64/Packages.gz
+ 1251ecfa683e6dec52de7b3300ae81f51006720d1abd14d7b97c56239bca6530 659 main/binary-arm64/Packages
+ 1587e3ce1528ea6d014d871e1dd80e9c72aff058469af0ad34c672ad1870a9d0 477 main/binary-arm64/Packages.gz
+ 84db948c52878c3a633bb30fd39611228f1c66ddbc26dd687ef724927be9d9ff 659 main/binary-armhf/Packages
+ 1a1b8266fc2e2bb4d60fca4a8690c49125b5a165d0abf6d18238e67915c775eb 476 main/binary-armhf/Packages.gz

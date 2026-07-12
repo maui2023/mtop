@@ -7,7 +7,8 @@
   <title>Mtop — Premium System Monitor TUI for Proxmox LXC & Bare Metal</title>
   <meta name="description"
     content="A lightweight, premium terminal user interface (TUI) system monitoring application for Proxmox LXC containers & Bare Metal machines. Built in Go.">
-  <meta name="keywords" content="mtop, system monitor, TUI, Proxmox, LXC, bare metal, cgroups, resource monitor, btop, linux system monitor, GPU monitoring, process manager">
+  <meta name="keywords"
+    content="mtop, system monitor, TUI, Proxmox, LXC, bare metal, cgroups, resource monitor, btop, linux system monitor, GPU monitoring, process manager">
   <meta name="theme-color" content="#00f5d4">
   <link rel="canonical" href="https://mtop.kpst.my" />
 
@@ -15,7 +16,8 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://mtop.kpst.my">
   <meta property="og:title" content="Mtop — Premium System Monitor TUI for Proxmox LXC & Bare Metal">
-  <meta property="og:description" content="A lightweight, premium terminal user interface (TUI) system monitoring application for Proxmox LXC containers & Bare Metal machines. Built in Go.">
+  <meta property="og:description"
+    content="A lightweight, premium terminal user interface (TUI) system monitoring application for Proxmox LXC containers & Bare Metal machines. Built in Go.">
   <meta property="og:image" content="https://raw.githubusercontent.com/maui2023/mtop/main/images/mtop-proxmox-lxc.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -24,8 +26,10 @@
   <meta property="twitter:card" content="summary_large_image">
   <meta property="twitter:url" content="https://mtop.kpst.my">
   <meta property="twitter:title" content="Mtop — Premium System Monitor TUI for Proxmox LXC & Bare Metal">
-  <meta property="twitter:description" content="A lightweight, premium terminal user interface (TUI) system monitoring application for Proxmox LXC containers & Bare Metal machines. Built in Go.">
-  <meta property="twitter:image" content="https://raw.githubusercontent.com/maui2023/mtop/main/images/mtop-proxmox-lxc.png">
+  <meta property="twitter:description"
+    content="A lightweight, premium terminal user interface (TUI) system monitoring application for Proxmox LXC containers & Bare Metal machines. Built in Go.">
+  <meta property="twitter:image"
+    content="https://raw.githubusercontent.com/maui2023/mtop/main/images/mtop-proxmox-lxc.png">
 
   <!-- Geographic Metadata / SEO Local -->
   <meta name="geo.region" content="MY-14" />
@@ -482,18 +486,23 @@
       .hero-title {
         font-size: 2.8rem;
       }
+
       .hero-desc {
         font-size: 1.05rem;
       }
+
       .nav-links {
         gap: 1.2rem;
       }
+
       .logo {
         font-size: 1.5rem;
       }
+
       .mock-terminal {
         font-size: 0.72rem;
       }
+
       .glass-card {
         padding: 1.8rem;
       }
@@ -503,50 +512,63 @@
       header {
         padding: 1rem;
       }
+
       .nav-container {
         flex-direction: column;
         gap: 0.8rem;
       }
+
       .nav-links {
         font-size: 0.9rem;
       }
+
       section.hero {
         padding-top: 10rem;
       }
+
       .hero-title {
         font-size: 2.3rem;
       }
+
       .hero-desc {
         font-size: 0.95rem;
         margin-bottom: 1.8rem;
       }
+
       .hero-buttons {
         flex-direction: column;
         gap: 0.8rem;
         align-items: center;
       }
+
       .hero-buttons .btn {
         width: 100%;
         max-width: 280px;
         text-align: center;
       }
+
       .mock-terminal {
         font-size: 0.64rem;
       }
+
       .terminal-header {
         padding: 0.5rem 0.8rem;
       }
+
       .terminal-content {
         padding: 0.8rem;
         min-height: 250px;
       }
+
       .glass-card {
         padding: 1.5rem;
       }
+
       .downloads-container {
         flex-direction: column;
         align-items: center;
       }
+
       .download-card {
         width: 100%;
         max-width: 280px;
@@ -659,29 +681,32 @@
         node modules needed. A single static binary runs instantly.</p>
 
       <!-- One-line Shell Installer -->
-      <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--color-border); border-radius: 8px; max-width: 580px; margin: 2rem auto; padding: 1rem; font-family: var(--font-mono); font-size: 0.85rem; text-align: left;">
-        <span style="color: var(--color-dim); display: block; margin-bottom: 0.5rem;"># Install automatically via APT / DNF:</span>
-        <code style="color: var(--color-cyan); word-break: break-all;">curl -sS https://raw.githubusercontent.com/maui2023/mtop/main/install.sh | sudo bash</code>
+      <div
+        style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--color-border); border-radius: 8px; max-width: 580px; margin: 2rem auto; padding: 1rem; font-family: var(--font-mono); font-size: 0.85rem; text-align: left;">
+        <span style="color: var(--color-dim); display: block; margin-bottom: 0.5rem;"># Install automatically via APT /
+          DNF:</span>
+        <code
+          style="color: var(--color-cyan); word-break: break-all;">curl -sS https://raw.githubusercontent.com/maui2023/mtop/main/install.sh | sudo bash</code>
       </div>
 
       <div class="downloads-container">
         <div class="download-card">
           <div class="arch-name">Linux x64</div>
           <div class="platform">AMD64 Arch</div>
-          <a href="https://github.com/maui2023/mtop/raw/main/mtop-linux-amd64" class="btn btn-secondary btn-sm"
+          <a href="https://github.com/maui2023/mtop/releases/download/v0.1.2/mtop" class="btn btn-secondary btn-sm"
             style="display: block;">Download Binary</a>
         </div>
         <div class="download-card">
           <div class="arch-name">Linux ARM64</div>
           <div class="platform">AArch64 (Pi / LXC)</div>
-          <a href="https://github.com/maui2023/mtop/raw/main/mtop-linux-arm64" class="btn btn-secondary btn-sm"
-            style="display: block;">Download Binary</a>
+          <a href="https://github.com/maui2023/mtop/releases/download/v0.1.2/mtop-linux-arm64"
+            class="btn btn-secondary btn-sm" style="display: block;">Download Binary</a>
         </div>
         <div class="download-card">
           <div class="arch-name">Linux ARM</div>
           <div class="platform">ARMv7 (32-bit)</div>
-          <a href="https://github.com/maui2023/mtop/raw/main/mtop-linux-arm" class="btn btn-secondary btn-sm"
-            style="display: block;">Download Binary</a>
+          <a href="https://github.com/maui2023/mtop/releases/download/v0.1.2/mtop-linux-arm"
+            class="btn btn-secondary btn-sm" style="display: block;">Download Binary</a>
         </div>
       </div>
     </div>
