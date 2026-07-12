@@ -7,12 +7,31 @@
   <title>Mtop — Premium System Monitor TUI for Proxmox LXC & Bare Metal</title>
   <meta name="description"
     content="A lightweight, premium terminal user interface (TUI) system monitoring application for Proxmox LXC containers & Bare Metal machines. Built in Go.">
+  <meta name="keywords" content="mtop, system monitor, TUI, Proxmox, LXC, bare metal, cgroups, resource monitor, btop, linux system monitor, GPU monitoring, process manager">
   <meta name="theme-color" content="#00f5d4">
+  <link rel="canonical" href="https://mtop.kpst.my" />
 
-  <!-- Open Graph -->
-  <meta property="og:title" content="Mtop System Monitor">
-  <meta property="og:description" content="Premium System Monitor TUI Tailored for Proxmox LXC & Bare Metal.">
+  <!-- Open Graph / Facebook / WhatsApp -->
   <meta property="og:type" content="website">
+  <meta property="og:url" content="https://mtop.kpst.my">
+  <meta property="og:title" content="Mtop — Premium System Monitor TUI for Proxmox LXC & Bare Metal">
+  <meta property="og:description" content="A lightweight, premium terminal user interface (TUI) system monitoring application for Proxmox LXC containers & Bare Metal machines. Built in Go.">
+  <meta property="og:image" content="https://raw.githubusercontent.com/maui2023/mtop/main/images/mtop-proxmox-lxc.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <!-- Twitter / X -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://mtop.kpst.my">
+  <meta property="twitter:title" content="Mtop — Premium System Monitor TUI for Proxmox LXC & Bare Metal">
+  <meta property="twitter:description" content="A lightweight, premium terminal user interface (TUI) system monitoring application for Proxmox LXC containers & Bare Metal machines. Built in Go.">
+  <meta property="twitter:image" content="https://raw.githubusercontent.com/maui2023/mtop/main/images/mtop-proxmox-lxc.png">
+
+  <!-- Geographic Metadata / SEO Local -->
+  <meta name="geo.region" content="MY-14" />
+  <meta name="geo.placename" content="Kuala Lumpur" />
+  <meta name="geo.position" content="3.1390;101.6869" />
+  <meta name="ICBM" content="3.1390, 101.6869" />
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -456,6 +475,82 @@
 
     .footer-links a:hover {
       color: var(--color-cyan);
+    }
+
+    /* Mobile Responsive Overrides */
+    @media (max-width: 768px) {
+      .hero-title {
+        font-size: 2.8rem;
+      }
+      .hero-desc {
+        font-size: 1.05rem;
+      }
+      .nav-links {
+        gap: 1.2rem;
+      }
+      .logo {
+        font-size: 1.5rem;
+      }
+      .mock-terminal {
+        font-size: 0.72rem;
+      }
+      .glass-card {
+        padding: 1.8rem;
+      }
+    }
+
+    @media (max-width: 600px) {
+      header {
+        padding: 1rem;
+      }
+      .nav-container {
+        flex-direction: column;
+        gap: 0.8rem;
+      }
+      .nav-links {
+        font-size: 0.9rem;
+      }
+      section.hero {
+        padding-top: 10rem;
+      }
+      .hero-title {
+        font-size: 2.3rem;
+      }
+      .hero-desc {
+        font-size: 0.95rem;
+        margin-bottom: 1.8rem;
+      }
+      .hero-buttons {
+        flex-direction: column;
+        gap: 0.8rem;
+        align-items: center;
+      }
+      .hero-buttons .btn {
+        width: 100%;
+        max-width: 280px;
+        text-align: center;
+      }
+      .mock-terminal {
+        font-size: 0.64rem;
+      }
+      .terminal-header {
+        padding: 0.5rem 0.8rem;
+      }
+      .terminal-content {
+        padding: 0.8rem;
+        min-height: 250px;
+      }
+      .glass-card {
+        padding: 1.5rem;
+      }
+      .downloads-container {
+        flex-direction: column;
+        align-items: center;
+      }
+      .download-card {
+        width: 100%;
+        max-width: 280px;
+      }
     }
   </style>
 </head>
