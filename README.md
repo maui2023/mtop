@@ -31,6 +31,22 @@ Running standard system monitors (like `htop` or `btop`) inside an LXC container
 - **🎨 Premium Visuals:** Uses the **Charm Bubble Tea** & **Lipgloss** frameworks for a modern console dashboard featuring smooth unicode indicators and rounded panels.
 - **⚡ Process Manager with Kill Switch:** Inspect processes dynamically. Scroll with `j`/`k`, change sorting metrics (CPU%, MEM%, PID, Name) with `s`, and terminate selected processes instantly by pressing **`9`** (sends `SIGKILL`).
 
+## 📦 Easy Installation (APT & DNF)
+
+Install Mtop automatically on your system using the installer script (detects your package manager and installs native packages/binaries):
+
+```bash
+curl -sS https://raw.githubusercontent.com/maui2023/mtop/main/install.sh | sudo bash
+```
+
+### Manual APT Repository Configuration (Debian/Ubuntu/Proxmox)
+To manually add our APT repository:
+```bash
+echo "deb [trusted=yes] https://raw.githubusercontent.com/maui2023/mtop/main/apt stable main" | sudo tee /etc/apt/sources.list.d/mtop.list
+sudo apt update
+sudo apt install mtop
+```
+
 ---
 
 ## 🛠️ Build & Installation
