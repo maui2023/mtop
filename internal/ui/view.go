@@ -65,51 +65,45 @@ func (m Model) View() string {
 	// 1. Render Header
 	header := m.renderHeader()
 
-	// 2. Render CPU & Memory Box (Section 1)
-	sec1Height := 11
-	cpuWidth := int(float64(m.width) * 0.55)
-	memWidth := m.width - cpuWidth
+	// 2. Render CPU Box (Row 1 - Full Width)
+	cpuHeight := 12
+	cpuBox := m.renderCPUBox(m.width, cpuHeight)
 
-	cpuBox := m.renderCPUBox(cpuWidth, sec1Height)
-	memBox := m.renderMemoryBox(memWidth, sec1Height)
+	// 3. Render GPU & Memory (RAM) Box (Row 2 - Balanced 50%/50%)
+	gpuRamHeight := 7
+	gpuWidth := m.width / 2
+	ramWidth := m.width - gpuWidth
 
-	row1 := lipgloss.JoinHorizontal(lipgloss.Top, cpuBox, memBox)
+	gpuBox := m.renderGPUBox(gpuWidth, gpuRamHeight)
+	ramBox := m.renderMemoryBox(ramWidth, gpuRamHeight)
 
-	// 3. Render GPU Box (Section 1.5) — only if GPUs detected
-	var gpuRow string
-	var gpuHeight int
-	if len(m.stats.GPUs) > 0 {
-		gpuHeight = 4 + len(m.stats.GPUs)*2
-		if gpuHeight < 6 {
-			gpuHeight = 6
-		}
-		gpuRow = m.renderGPUBox(m.width, gpuHeight)
-	}
+	row2 := lipgloss.JoinHorizontal(lipgloss.Top, gpuBox, ramBox)
 
-	// 4. Render Disk & Net Box (Section 2)
+	// 4. Render Disk & Net Box (Row 3 - Balanced 50%/50%)
 	sec2Height := 9
-	diskWidth := int(float64(m.width) * 0.55)
+	diskWidth := m.width / 2
 	netWidth := m.width - diskWidth
 
 	diskBox := m.renderDiskBox(diskWidth, sec2Height)
 	netBox := m.renderNetBox(netWidth, sec2Height)
 
-	row2 := lipgloss.JoinHorizontal(lipgloss.Top, diskBox, netBox)
+	row3 := lipgloss.JoinHorizontal(lipgloss.Top, diskBox, netBox)
 
 	// 5. Render Processes Box
-	procHeight := m.height - (headerHeight() + sec1Height + gpuHeight + sec2Height)
+	procHeight := m.height - (headerHeight() + cpuHeight + gpuRamHeight + sec2Height)
 	if procHeight < 6 {
 		procHeight = 6
 	}
 	procBox := m.renderProcessBox(m.width, procHeight)
 
-	parts := []string{header, row1}
-	if gpuRow != "" {
-		parts = append(parts, gpuRow)
-	}
-	parts = append(parts, row2, procBox)
-
-	return lipgloss.JoinVertical(lipgloss.Left, parts...)
+	return lipgloss.JoinVertical(
+		lipgloss.Left,
+		header,
+		cpuBox,
+		row2,
+		row3,
+		procBox,
+	)
 }
 
 func headerHeight() int {
@@ -147,35 +141,41 @@ func (m Model) renderHeader() string {
 func (m Model) renderCPUBox(width, height int) string {
 	title := styleBoxTitle.Render(" CPU ")
 
-	// Sparkline graph on the right side of the header row
-	graphWidth := width / 3
-	if graphWidth < 10 {
-		graphWidth = 10
+	// Split 50% left (cores and info) / 50% right (graph)
+	innerAvailableWidth := width - 4
+	graphWidth := innerAvailableWidth / 2
+	leftWidth := innerAvailableWidth - graphWidth
+
+	graphHeight := height - 4
+	if graphHeight < 3 {
+		graphHeight = 3
 	}
-	graphHeight := 3 // rows for the mini graph
 	graph := m.renderCPUGraph(graphWidth, graphHeight)
 
-	// Total usage bar (narrowed to leave room for graph)
+	// Total usage bar with a neat, smaller size
 	totalPct := m.stats.CPU.UsageTotal
-	barWidth := width - graphWidth - 22
-	if barWidth < 5 {
-		barWidth = 5
-	}
-	progressBar := makeProgressBar(totalPct, barWidth, colorCyan)
+	progressBar := makeProgressBar(totalPct, 12, colorCyan)
 	totalStr := fmt.Sprintf("Usage: %5.1f%% %s", totalPct, progressBar)
 
 	// Core bars
 	var coresStr []string
-	coresPerLine := 2
-	if width < 50 {
+	coresPerLine := 3
+	if leftWidth < 55 {
+		coresPerLine = 2
+	}
+	if leftWidth < 38 {
 		coresPerLine = 1
 	}
 
 	line := ""
-	for _, core := range m.stats.CPU.UsagePerCore {
-		coreBarWidth := (width / coresPerLine) - 14
+	for i, core := range m.stats.CPU.UsagePerCore {
+		colWidth := leftWidth / coresPerLine
+		coreBarWidth := colWidth - 14
 		if coreBarWidth < 4 {
 			coreBarWidth = 4
+		}
+		if coreBarWidth > 10 {
+			coreBarWidth = 10 // keep CPU core bars compact
 		}
 		coreBar := makeProgressBar(core.Usage, coreBarWidth, colorBlue)
 		coreStr := fmt.Sprintf("C%d:%4.0f%% %s", core.ID, core.Usage, coreBar)
@@ -183,22 +183,21 @@ func (m Model) renderCPUBox(width, height int) string {
 		if line == "" {
 			line = coreStr
 		} else {
-			colWidth := width / coresPerLine
 			padLen := colWidth - lipgloss.Width(line) - 1
 			if padLen > 0 {
 				line += strings.Repeat(" ", padLen)
 			}
 			line += " " + coreStr
+		}
+
+		if (i+1)%coresPerLine == 0 || i == len(m.stats.CPU.UsagePerCore)-1 {
 			coresStr = append(coresStr, line)
 			line = ""
 		}
 	}
-	if line != "" {
-		coresStr = append(coresStr, line)
-	}
 
 	// Limit to inner height
-	maxCoresLines := height - 6
+	maxCoresLines := height - 5
 	if maxCoresLines < 1 {
 		maxCoresLines = 1
 	}
@@ -206,17 +205,15 @@ func (m Model) renderCPUBox(width, height int) string {
 		coresStr = coresStr[:maxCoresLines]
 	}
 
-	// Left column: title + usage + cores
-	leftLines := []string{title, "", totalStr, ""}
+	// Left column content
+	leftLines := []string{totalStr, ""}
 	leftLines = append(leftLines, coresStr...)
-	leftContent := strings.Join(leftLines, "\n")
+	leftContent := title + "\n\n" + strings.Join(leftLines, "\n")
 
-	// Right column: graph
+	// Right column content
 	graphLabel := styleHeaderLabel.Render("CPU History")
 	graphContent := graphLabel + "\n" + graph
 
-	// Join left and right side by side inside the box
-	leftWidth := width - graphWidth - 4
 	leftCol := lipgloss.NewStyle().Width(leftWidth).Render(leftContent)
 	rightCol := lipgloss.NewStyle().
 		Width(graphWidth).
@@ -309,13 +306,17 @@ func (m Model) renderMemoryBox(width, height int) string {
 	mem := m.stats.Memory
 	ramPct := mem.UsagePct
 
-	barWidth := width - 22
+	// Calculate bar width dynamically to fit inside the box content area (width - 4) and cap at 20
+	barWidth := (width - 4) - 33
 	if barWidth < 5 {
 		barWidth = 5
 	}
+	if barWidth > 20 {
+		barWidth = 20
+	}
 
 	ramBar := makeProgressBar(ramPct, barWidth, colorPurple)
-	ramDetail := fmt.Sprintf("RAM:  %5.1f%% %s\n      %s / %s",
+	ramDetail := fmt.Sprintf("RAM:  %5.1f%% %s  %s / %s",
 		ramPct,
 		ramBar,
 		formatBytes(mem.Used),
@@ -326,7 +327,7 @@ func (m Model) renderMemoryBox(width, height int) string {
 	if mem.SwapTotal > 0 {
 		swapPct := float64(mem.SwapUsed) / float64(mem.SwapTotal) * 100
 		swapBar := makeProgressBar(swapPct, barWidth, colorPink)
-		swapDetail = fmt.Sprintf("SWAP: %5.1f%% %s\n      %s / %s",
+		swapDetail = fmt.Sprintf("SWAP: %5.1f%% %s  %s / %s",
 			swapPct,
 			swapBar,
 			formatBytes(mem.SwapUsed),
@@ -369,9 +370,11 @@ func (m Model) renderDiskBox(width, height int) string {
 			mount = mount[:12] + "..."
 		}
 
-		barW := width - 47
-		if barW < 4 {
-			barW = 4
+		// Calculate dynamic bar width to stretch all the way to the right edge
+		// non-bar text length is 45 (including brackets). Fit inside width - 4
+		barW := (width - 4) - 45
+		if barW < 5 {
+			barW = 5
 		}
 		bar := makeProgressBar(d.UsagePct, barW, colorGold)
 
@@ -522,7 +525,7 @@ func (m Model) renderProcessBox(width, height int) string {
 	}
 
 	// Footer help instructions
-	helpStr := styleHeaderLabel.Render(" [q] Quit  |  [s] Toggle Sort  |  [j/k] Scroll Processes  |  [r] Refresh ")
+	helpStr := styleHeaderLabel.Render(" [q] Quit  |  [s] Toggle Sort  |  [j/k] Scroll Processes  |  [9] Kill Proc  |  [r] Refresh ")
 	content := title + "\n\n" + strings.Join(lines, "\n") + "\n\n" + helpStr
 
 	return styleBorder.
@@ -567,6 +570,9 @@ func (m Model) renderGPUBox(width, height int) string {
 		barWidth := width - 28
 		if barWidth < 5 {
 			barWidth = 5
+		}
+		if barWidth > 20 {
+			barWidth = 20
 		}
 
 		// GPU core utilization bar

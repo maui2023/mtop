@@ -1,7 +1,9 @@
 package ui
 
 import (
+	"os"
 	"sort"
+	"syscall"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -61,6 +63,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.sortProcesses()
 			m.cursor = 0
 			m.scrollOffset = 0
+
+		case "9":
+			if len(m.stats.Processes) > 0 && m.cursor >= 0 && m.cursor < len(m.stats.Processes) {
+				pid := m.stats.Processes[m.cursor].PID
+				if proc, err := os.FindProcess(pid); err == nil {
+					_ = proc.Signal(syscall.SIGKILL)
+				}
+				return m, m.fetchStatsCmd()
+			}
 
 		case "r":
 			return m, m.fetchStatsCmd()
